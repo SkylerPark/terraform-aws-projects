@@ -1,0 +1,6 @@
+# terraform
+**/.terraform/*
+.terraform.lock.hcl
+**/.terragrunt-cache/*
+init_config.hcl
+**/account.hcl

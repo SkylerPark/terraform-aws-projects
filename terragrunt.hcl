@@ -1,0 +1,44 @@
+locals {
+  region_vars      = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  account_vars     = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  environment_vars = read_terragrunt_config(find_in_parent_folders("environment.hcl"))
+  init_config_vars = read_terragrunt_config(find_in_parent_folders("init_config.hcl"))
+  region           = local.region_vars.locals.region
+  environment      = local.environment_vars.locals.environment
+  bucket           = local.init_config_vars.locals.bucket
+  dynamodb_table   = local.init_config_vars.locals.dynamodb_table
+  role_name        = local.init_config_vars.locals.role_name
+  account_id       = local.account_vars.locals.account_id
+}
+
+# remote_state {
+#   backend = "s3"
+#   generate = {
+#     path      = "backend.tf"
+#     if_exists = "overwrite_terragrunt"
+#   }
+#   config = {
+#     bucket         = "${local.bucket}"
+#     key            = "${path_relative_to_include()}/terraform.tfstate"
+#     region         = "ap-northeast-2"
+#     encrypt        = true
+#     dynamodb_table = "${local.dynamodb_table}"
+#   }
+# }
+
+generate "provider" {
+  path      = "provider.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<EOF
+generate "provider" {
+  path      = "provider.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<EOF
+provider "aws" {
+  region = "${local.region}"
+  assume_role {
+    role_arn = "arn:aws:iam::${local.account_id}:role/${local.role_name}"
+  }
+}
+EOF
+}

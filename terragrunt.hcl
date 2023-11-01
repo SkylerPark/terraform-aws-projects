@@ -19,15 +19,12 @@ remote_state {
     if_exists = "overwrite_terragrunt"
   }
   config = {
-    bucket                         = "${local.bucket}"
-    key                            = "${path_relative_to_include()}/terraform.tfstate"
-    region                         = "ap-northeast-2"
-    profile                        = "${local.profile_name}"
-    encrypt                        = true
-    dynamodb_table                 = "${local.dynamodb_table}"
-    enable_lock_table_ssencryption = true
-    skip_bucket_root_access        = true
-    skip_bucket_enforced_tls       = true
+    bucket         = "${local.bucket}"
+    key            = "${path_relative_to_include()}/terraform.tfstate"
+    region         = "ap-northeast-2"
+    profile        = "${local.profile_name}"
+    encrypt        = true
+    dynamodb_table = "${local.dynamodb_table}"
   }
 }
 

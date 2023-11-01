@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::${local.module_url}//dynamodb/?ref=${local.module_version}"
+  source = "git::${local.module_url}//iam/modules/iam-account/?ref=${local.module_version}"
 }
 
 locals {
@@ -13,17 +13,9 @@ locals {
   module_url          = local.module_repo_vars.locals.url
   module_version      = local.module_version_vars.locals.module_version
   project_name        = local.account_vars.locals.project_name
+  account_name        = local.account_vars.locals.account_name
 }
 
 inputs = {
-  name           = "test"
-  read_capacity  = 5
-  write_capacity = 5
-  hash_key       = "LockID"
-  attributes = [
-    {
-      name = "LockID"
-      type = "S"
-    }
-  ]
+  account_alias = local.account_name
 }

@@ -8,34 +8,33 @@ locals {
   bucket           = local.init_config_vars.locals.bucket
   dynamodb_table   = local.init_config_vars.locals.dynamodb_table
   role_name        = local.init_config_vars.locals.role_name
+  profile_name     = local.init_config_vars.locals.profile_name
   account_id       = local.account_vars.locals.account_id
 }
 
-# remote_state {
-#   backend = "s3"
-#   generate = {
-#     path      = "backend.tf"
-#     if_exists = "overwrite_terragrunt"
-#   }
-#   config = {
-#     bucket         = "${local.bucket}"
-#     key            = "${path_relative_to_include()}/terraform.tfstate"
-#     region         = "ap-northeast-2"
-#     encrypt        = true
-#     dynamodb_table = "${local.dynamodb_table}"
-#   }
-# }
+remote_state {
+  backend = "s3"
+  generate = {
+    path      = "backend.tf"
+    if_exists = "overwrite_terragrunt"
+  }
+  config = {
+    bucket         = "${local.bucket}"
+    key            = "${path_relative_to_include()}/terraform.tfstate"
+    region         = "ap-northeast-2"
+    profile        = "${local.profile_name}"
+    encrypt        = true
+    dynamodb_table = "${local.dynamodb_table}"
+  }
+}
 
-generate "provider" {
-  path      = "provider.tf"
-  if_exists = "overwrite_terragrunt"
-  contents  = <<EOF
 generate "provider" {
   path      = "provider.tf"
   if_exists = "overwrite_terragrunt"
   contents  = <<EOF
 provider "aws" {
   region = "${local.region}"
+  profile = "${local.profile_name}"
   assume_role {
     role_arn = "arn:aws:iam::${local.account_id}:role/${local.role_name}"
   }

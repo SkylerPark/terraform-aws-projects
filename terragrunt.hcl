@@ -1,15 +1,16 @@
 locals {
-  region_vars      = read_terragrunt_config(find_in_parent_folders("region.hcl"))
-  account_vars     = read_terragrunt_config(find_in_parent_folders("account.hcl"))
-  environment_vars = read_terragrunt_config(find_in_parent_folders("environment.hcl"))
-  init_config_vars = read_terragrunt_config(find_in_parent_folders("init_config.hcl"))
-  region           = local.region_vars.locals.region
-  environment      = local.environment_vars.locals.environment
-  bucket           = local.init_config_vars.locals.bucket
-  dynamodb_table   = local.init_config_vars.locals.dynamodb_table
-  role_name        = local.init_config_vars.locals.role_name
-  profile_name     = local.init_config_vars.locals.profile_name
-  account_id       = local.account_vars.locals.account_id
+  region_vars            = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  account_vars           = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  environment_vars       = read_terragrunt_config(find_in_parent_folders("environment.hcl"))
+  init_config_vars       = read_terragrunt_config(find_in_parent_folders("init_config.hcl"))
+  region                 = local.region_vars.locals.region
+  environment            = local.environment_vars.locals.environment
+  bucket                 = local.init_config_vars.locals.bucket
+  dynamodb_table         = local.init_config_vars.locals.dynamodb_table
+  role_name              = local.init_config_vars.locals.role_name
+  profile_name           = local.init_config_vars.locals.profile_name
+  account_id             = local.account_vars.locals.account_id
+  pipeline_hooks_enabled = get_env("pipeline", "false") == "true" ? true : false
 }
 
 remote_state {
@@ -40,4 +41,11 @@ provider "aws" {
   }
 }
 EOF
+}
+
+terraform {
+  after_hook "pipeline" {
+    commands = local.pipeline_hooks_enabled ? ["plan"] : []
+    execute  = ["echo", "pipeline"]
+  }
 }

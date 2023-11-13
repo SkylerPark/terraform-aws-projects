@@ -10,26 +10,27 @@ locals {
   module_url     = local.module_repo_vars.locals.url
   module_version = local.module_version_vars.locals.module_version
   project_name   = local.account_vars.locals.project_name
-  account_name   = local.account_vars.locals.account_name
-
-  common_vars       = read_terragrunt_config("${dirname(find_in_parent_folders())}/_common/variables/common.hcl")
-  manage_account_id = local.common_vars.locals.manage_account_id
-}
-
-dependency "iac_policy" {
-  config_path = "../../iam-policy/iac-policy"
 }
 
 inputs = {
-  create_role       = true
-  role_name         = "${local.project_name}-iac-role"
-  role_requires_mfa = false
-
-  trusted_role_arns = [
-    "arn:aws:iam::${local.manage_account_id}:user/${local.project_name}-iac"
-  ]
+  create_role                     = true
+  role_name                       = "${local.project_name}-eks-role"
+  allow_self_assume_role          = true
+  create_custom_role_trust_policy = true
 
   custom_role_policy_arns = [
-    dependency.iac_policy.outputs.arn
+    "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+    "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
   ]
+
+  custom_role_trust_policy = {
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "eks.amazonaws.com"
+      }
+    }]
+    Version = "2012-10-17"
+  }
 }

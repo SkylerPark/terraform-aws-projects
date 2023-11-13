@@ -12,7 +12,7 @@ locals {
   project_name   = local.account_vars.locals.project_name
   account_name   = local.account_vars.locals.account_name
 
-  common_vars       = read_terragrunt_config("${dirname(find_in_parent_folders("module_repo.hcl"))}/_common/variables/common.hcl")
+  common_vars       = read_terragrunt_config("${dirname(find_in_parent_folders())}/_common/variables/common.hcl")
   manage_account_id = local.common_vars.locals.manage_account_id
   admin_users       = local.common_vars.locals.admin_users
 }

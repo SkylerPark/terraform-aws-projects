@@ -18,7 +18,7 @@ locals {
 }
 
 dependency "admin_policy" {
-  config_path = "../admin-policy"
+  config_path = "../../iam-policy/admin-policy"
 }
 
 inputs = {

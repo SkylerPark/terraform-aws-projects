@@ -17,7 +17,7 @@ locals {
 }
 
 dependency "iac_policy" {
-  config_path = "../iac-policy"
+  config_path = "../../iam-policy/iac-policy"
 }
 
 inputs = {

@@ -12,9 +12,8 @@ locals {
   project_name   = local.account_vars.locals.project_name
   account_name   = local.account_vars.locals.account_name
 
-  common_vars = read_terragrunt_config("${dirname(find_in_parent_folders("module_repo.hcl"))}/_common/variables/common.hcl")
+  common_vars = read_terragrunt_config("${dirname(find_in_parent_folders())}/_common/variables/common.hcl")
   addresses   = local.common_vars.locals.addresses
-  role_name   = "${local.project_name}-iac-role"
 }
 
 inputs = {
@@ -29,7 +28,7 @@ inputs = {
           "Sid" : "VisualEditor0",
           "Effect" : "Allow",
           "Action" : "sts:AssumeRole",
-          "Resource" : "arn:aws:iam::*:role/${local.role_name}",
+          "Resource" : "arn:aws:iam::*:role/${local.project_name}-iac-role",
           "Condition" : {
             "IpAddress" : {
               "aws:SourceIp" : "${local.addresses}"

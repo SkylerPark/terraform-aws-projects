@@ -1,9 +1,9 @@
-include "root" {
-  path = find_in_parent_folders()
+terraform {
+  source = "git::${local.module_url}//security-group?ref=${local.module_version}"
 }
 
-terraform {
-  source = "git::${local.module_url}//kms/?ref=${local.module_version}"
+dependency "vpc" {
+  config_path = "../../vpc/project-vpc"
 }
 
 locals {
@@ -19,12 +19,16 @@ locals {
 }
 
 inputs = {
-  description         = "${local.project_name}-eks-${local.environment} cluster encryption key"
-  key_usage           = "ENCRYPT_DECRYPT"
-  enable_key_rotation = true
-  key_users           = ["arn:aws:iam::497712261737:role/moham-eks-cluster-role"]
+  name   = "${local.project_name}-eks-node-sg"
+  vpc_id = dependency.vpc.outputs.vpc_id
 
-  computed_aliases = {
-    cluster = { name = "eks/${local.project_name}-eks-${local.environment}" }
-  }
+  ingress_with_cidr_ipv4 = [
+    {
+      description = "test"
+      from_port   = 22
+      to_port     = 22
+      ip_protocol = "TCP"
+      cidr_ipv4   = ip
+    }
+  ]
 }

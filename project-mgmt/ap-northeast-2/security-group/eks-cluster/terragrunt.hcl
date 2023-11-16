@@ -3,7 +3,11 @@ include "root" {
 }
 
 terraform {
-  source = "git::${local.module_url}//kms/?ref=${local.module_version}"
+  source = "git::${local.module_url}//security-group?ref=${local.module_version}"
+}
+
+dependency "vpc" {
+  config_path = "../../vpc/project-vpc"
 }
 
 locals {
@@ -19,12 +23,16 @@ locals {
 }
 
 inputs = {
-  description         = "${local.project_name}-eks-${local.environment} cluster encryption key"
-  key_usage           = "ENCRYPT_DECRYPT"
-  enable_key_rotation = true
-  key_users           = ["arn:aws:iam::497712261737:role/moham-eks-cluster-role"]
+  name   = "${local.project_name}-eks-cluster-sg"
+  vpc_id = dependency.vpc.outputs.vpc_id
 
-  computed_aliases = {
-    cluster = { name = "eks/${local.project_name}-eks-${local.environment}" }
-  }
+  ingress_with_cidr_ipv4 = [
+    for ip in [for k, v in dependency.vpc.outputs.subnets : v.cidr_block if v.tier == "private"] : {
+      description = "Node groups to cluster API"
+      from_port   = 22
+      to_port     = 22
+      ip_protocol = "tcp"
+      cidr_ipv4   = ip
+    }
+  ]
 }

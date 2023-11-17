@@ -2,10 +2,6 @@ terraform {
   source = "git::${local.module_url}//iam/modules/iam-policy/?ref=${local.module_version}"
 }
 
-dependency "kms" {
-  config_path = "../../../ap-northeast-2/kms/eks-cluster"
-}
-
 locals {
   module_repo_vars    = read_terragrunt_config(find_in_parent_folders("module_repo.hcl"))
   module_version_vars = read_terragrunt_config(find_in_parent_folders("module_version.hcl"))
@@ -32,9 +28,9 @@ inputs = {
             "kms:Encrypt",
             "kms:Decrypt",
             "kms:ListGrants",
-            "kms:DescribeKey",
+            "kms:DescribeKey"
           ],
-          "Resource" : dependency.kms.outputs.key_arn,
+          "Resource" : "*"
         }
       ]
     }

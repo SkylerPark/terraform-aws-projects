@@ -90,4 +90,6 @@ inputs = {
       route_table_name  = "${local.name}-private-rt-01"
     }
   ]
+
+  secondary_cidr_blocks = ["100.1.0.0/16", "100.2.0.0/16"]
 }

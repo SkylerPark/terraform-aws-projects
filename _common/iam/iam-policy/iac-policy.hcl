@@ -30,9 +30,6 @@ inputs = {
           "Action" : "*",
           "Resource" : "*",
           "Condition" : {
-            "Bool" : {
-              "aws:ViaAWSService" : "false"
-            },
             "IpAddress" : {
               "aws:SourceIp" : "${local.addresses}"
             }

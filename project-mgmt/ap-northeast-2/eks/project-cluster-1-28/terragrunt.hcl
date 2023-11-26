@@ -6,8 +6,12 @@ terraform {
   source = "git::${local.module_url}//eks/?ref=${local.module_version}"
 }
 
-dependency "iam_role" {
+dependency "iam_eks_cluster_role" {
   config_path = "../../../global/iam-assumable-role/eks-cluster-role"
+}
+
+dependency "iam_eks_node_role" {
+  config_path = "../../../global/iam-assumable-role/eks-node-role"
 }
 
 dependency "kms" {
@@ -16,6 +20,18 @@ dependency "kms" {
 
 dependency "vpc" {
   config_path = "../../vpc/project-vpc"
+}
+
+dependency "key_pair" {
+  config_path = "../../ec2-key-pair/project-key-pair"
+}
+
+dependency "eks_cluster_sg" {
+  config_path = "../../security-group/eks-cluster"
+}
+
+dependency "eks_node_sg" {
+  config_path = "../../security-group/eks-node"
 }
 
 locals {
@@ -31,13 +47,58 @@ locals {
 }
 
 inputs = {
-  name                      = "${local.project_name}-eks"
-  cluster_version           = "1.28"
-  cluster_enabled_log_types = []
-  iam_role_arn              = dependency.iam_role.outputs.iam_role_arn
-  control_plane_subnet_ids  = [for k, v in dependency.vpc.outputs.subnets : v.id if v.tier == "private"]
+  name                           = "${local.project_name}-eks"
+  cluster_version                = "1.28"
+  cluster_enabled_log_types      = []
+  iam_role_arn                   = dependency.iam_eks_cluster_role.outputs.iam_role_arn
+  cluster_security_group_ids     = [dependency.eks_cluster_sg.outputs.security_group_id]
+  control_plane_subnet_ids       = concat([for k, v in dependency.vpc.outputs.subnets : v.id if v.tier == "public"], [for k, v in dependency.vpc.outputs.subnets : v.id if v.tier == "private"])
+  cluster_endpoint_public_access = true
+  subnet_ids                     = [for k, v in dependency.vpc.outputs.subnets : v.id if v.tier == "private"]
   cluster_encryption_config = {
     provider_key_arn = dependency.kms.outputs.key_arn
     resources        = ["secrets"]
+  }
+  cluster_addons = {
+    coredns = {
+      most_recent = true
+    }
+    kube-proxy = {
+      most_recent = true
+    }
+    vpc-cni = {
+      most_recent = true
+    }
+  }
+  eks_managed_node_group_defaults = {
+    vpc_security_group_ids     = [dependency.eks_node_sg.outputs.security_group_id]
+    enable_bootstrap_user_data = true
+  }
+  eks_managed_node_groups = {
+    v1 = {
+      name           = "${local.project_name}-eks-api"
+      min_size       = 2
+      max_size       = 2
+      desired_size   = 2
+      iam_role_arn   = dependency.iam_eks_node_role.outputs.iam_role_arn
+      key_name       = dependency.key_pair.outputs.key_pair_name
+      instance_types = ["t4g.medium"]
+      ami_type       = "AL2_ARM_64"
+      capacity_type  = "SPOT"
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 100
+            volume_type           = "gp3"
+            iops                  = 3000
+            throughput            = 150
+            encrypted             = true
+            delete_on_termination = true
+          }
+        }
+      }
+      tag_specifications = ["instance", "network-interface", "volume", "spot-instances-request"]
+    }
   }
 }

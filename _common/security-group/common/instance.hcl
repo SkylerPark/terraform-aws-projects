@@ -27,11 +27,20 @@ inputs = {
 
   ingress_with_cidr_ipv4 = [
     for ip in local.addresses : {
-      description = "test"
+      description = "HQ Allow"
       from_port   = 22
       to_port     = 22
       ip_protocol = "TCP"
       cidr_ipv4   = ip
+    }
+  ]
+  egress_with_cidr_ipv4 = [
+    {
+      description = "Allow all egress"
+      from_port   = "-1"
+      to_port     = "-1"
+      ip_protocol = "-1"
+      cidr_ipv4   = "0.0.0.0/0"
     }
   ]
 }

@@ -51,23 +51,6 @@ locals {
   account_id   = local.account_vars.locals.account_id
 }
 
-generate "provider-local" {
-  path      = "provider-local.tf"
-  if_exists = "overwrite_terragrunt"
-  contents  = <<EOF
-provider "kubernetes" {
-  host                   = aws_eks_cluster.this.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.this.name, "--profile", "${local.profile_name}", "--role-arn", "arn:aws:iam::${local.account_id}:role/${local.role_name}"]
-  }
-}
-EOF
-}
-
 inputs = {
   name                           = "${local.project_name}-eks"
   cluster_version                = "1.28"
@@ -94,10 +77,45 @@ inputs = {
     }
   }
 
-  create_aws_auth_configmap               = true
+  manage_aws_auth_configmap               = true
   aws_auth_node_iam_role_arns_non_windows = ["arn:aws:iam::497712261737:role/moham-iac-role"]
   aws_auth_users                          = ["parksm"]
   aws_auth_accounts                       = ["497712261737"]
+
+  #  aws_auth_node_iam_role_arns_non_windows = [
+  #   module.eks_managed_node_group.iam_role_arn,
+  #   module.self_managed_node_group.iam_role_arn,
+  # ]
+  # aws_auth_fargate_profile_pod_execution_role_arns = [
+  #   module.fargate_profile.fargate_profile_pod_execution_role_arn
+  # ]
+
+  # aws_auth_roles = [
+  #   {
+  #     rolearn  = "arn:aws:iam::66666666666:role/role1"
+  #     username = "role1"
+  #     groups   = ["system:masters"]
+  #   },
+  # ]
+
+  # aws_auth_users = [
+  #   {
+  #     userarn  = "arn:aws:iam::66666666666:user/user1"
+  #     username = "user1"
+  #     groups   = ["system:masters"]
+  #   },
+  #   {
+  #     userarn  = "arn:aws:iam::66666666666:user/user2"
+  #     username = "user2"
+  #     groups   = ["system:masters"]
+  #   },
+  # ]
+
+  # aws_auth_accounts = [
+  #   "777777777777",
+  #   "888888888888",
+  # ]
+
 
   eks_managed_node_group_defaults = {
     vpc_security_group_ids     = [dependency.eks_node_sg.outputs.security_group_id]

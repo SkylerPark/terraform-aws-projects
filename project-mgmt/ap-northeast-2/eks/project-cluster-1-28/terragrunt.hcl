@@ -14,6 +14,10 @@ dependency "iam_eks_node_role" {
   config_path = "../../../global/iam-assumable-role/eks-node-role"
 }
 
+dependency "iam_iac_role" {
+  config_path = "../../../global/iam-assumable-role/iac-role"
+}
+
 dependency "kms" {
   config_path = "../../kms/eks-cluster"
 }
@@ -49,6 +53,9 @@ locals {
   role_name    = local.init_config_vars.locals.role_name
   profile_name = local.init_config_vars.locals.profile_name
   account_id   = local.account_vars.locals.account_id
+
+  common_vars = read_terragrunt_config("${dirname(find_in_parent_folders())}/_common/variables/common.hcl")
+  admin_users = local.common_vars.locals.admin_users
 }
 
 inputs = {
@@ -77,45 +84,25 @@ inputs = {
     }
   }
 
-  manage_aws_auth_configmap               = true
-  aws_auth_node_iam_role_arns_non_windows = ["arn:aws:iam::497712261737:role/moham-iac-role"]
-  aws_auth_users                          = ["parksm"]
-  aws_auth_accounts                       = ["497712261737"]
+  manage_aws_auth_configmap = true
 
-  #  aws_auth_node_iam_role_arns_non_windows = [
-  #   module.eks_managed_node_group.iam_role_arn,
-  #   module.self_managed_node_group.iam_role_arn,
-  # ]
-  # aws_auth_fargate_profile_pod_execution_role_arns = [
-  #   module.fargate_profile.fargate_profile_pod_execution_role_arn
-  # ]
+  aws_auth_roles = [
+    {
+      rolearn  = dependency.iam_iac_role.outputs.iam_role_arn
+      username = dependency.iam_iac_role.outputs.iam_role_name
+      groups   = ["system:masters"]
+    },
+  ]
 
-  # aws_auth_roles = [
-  #   {
-  #     rolearn  = "arn:aws:iam::66666666666:role/role1"
-  #     username = "role1"
-  #     groups   = ["system:masters"]
-  #   },
-  # ]
+  aws_auth_users = [
+    for user in local.admin_users : {
+      userarn  = "arn:aws:iam::${local.account_id}:user/${user}"
+      username = "${user}"
+      groups   = ["system:masters"]
+    }
+  ]
 
-  # aws_auth_users = [
-  #   {
-  #     userarn  = "arn:aws:iam::66666666666:user/user1"
-  #     username = "user1"
-  #     groups   = ["system:masters"]
-  #   },
-  #   {
-  #     userarn  = "arn:aws:iam::66666666666:user/user2"
-  #     username = "user2"
-  #     groups   = ["system:masters"]
-  #   },
-  # ]
-
-  # aws_auth_accounts = [
-  #   "777777777777",
-  #   "888888888888",
-  # ]
-
+  aws_auth_accounts = ["${local.account_id}"]
 
   eks_managed_node_group_defaults = {
     vpc_security_group_ids     = [dependency.eks_node_sg.outputs.security_group_id]

@@ -107,10 +107,11 @@ inputs = {
   eks_managed_node_group_defaults = {
     vpc_security_group_ids     = [dependency.eks_node_sg.outputs.security_group_id]
     enable_bootstrap_user_data = true
+    bootstrap_extra_args       = "--use-max-pods false --kubelet-extra-args '--max-pods=110'"
   }
   eks_managed_node_groups = {
     v1 = {
-      name           = "${local.project_name}-eks-api"
+      name           = "${local.project_name}-eks-node"
       min_size       = 2
       max_size       = 2
       desired_size   = 2

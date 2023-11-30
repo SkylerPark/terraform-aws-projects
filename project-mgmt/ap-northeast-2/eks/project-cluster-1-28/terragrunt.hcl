@@ -67,6 +67,8 @@ inputs = {
   cluster_endpoint_public_access = true
   control_plane_subnet_ids       = concat([for k, v in dependency.vpc.outputs.subnets : v.id if v.tier == "public"], [for k, v in dependency.vpc.outputs.subnets : v.id if v.tier == "private"])
   subnet_ids                     = [for k, v in dependency.vpc.outputs.subnets : v.id if v.tier == "private"]
+  enable_secondary_subnet        = true
+  secondary_subnets              = dependency.vpc.outputs.secondary_subnets
   cluster_encryption_config = {
     provider_key_arn = dependency.kms.outputs.key_arn
     resources        = ["secrets"]
@@ -81,6 +83,14 @@ inputs = {
     }
     vpc-cni = {
       most_recent = true
+      configuration_values = jsonencode({
+        env = {
+          AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG = "true"
+          WARM_ENI_TARGET                    = "1"
+          ENABLE_PREFIX_DELEGATION           = "true"
+          ENI_CONFIG_LABEL_DEF               = "topology.kubernetes.io/zone"
+        }
+      })
     }
   }
 

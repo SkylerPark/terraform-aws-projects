@@ -91,5 +91,19 @@ inputs = {
     }
   ]
 
-  secondary_cidr_blocks = ["100.1.0.0/16", "100.2.0.0/16"]
+  secondary_cidr_blocks = ["100.1.0.0/16"]
+  secondary_subnets = [
+    {
+      name              = "${local.name}"
+      tier              = "secondary"
+      availability_zone = "ap-northeast-2a"
+      cidr_block        = "100.1.0.0/18"
+    },
+    {
+      name              = "${local.name}"
+      tier              = "secondary"
+      availability_zone = "ap-northeast-2c"
+      cidr_block        = "100.1.64.0/18"
+    }
+  ]
 }

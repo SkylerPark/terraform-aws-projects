@@ -86,7 +86,8 @@ inputs = {
       configuration_values = jsonencode({
         env = {
           AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG = "true"
-          WARM_ENI_TARGET                    = "1"
+          WARM_ENI_TARGET                    = "2"
+          MINIMUM_IP_TARGET                  = "12"
           ENABLE_PREFIX_DELEGATION           = "true"
           ENI_CONFIG_LABEL_DEF               = "topology.kubernetes.io/zone"
         }

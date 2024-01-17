@@ -45,6 +45,15 @@ inputs = {
         ip_protocol = "tcp"
         cidr_ipv4   = ip
       }
+    ],
+    [
+      for k, v in dependency.vpc.outputs.secondary_subnets : {
+        description = "Node groups to cluster API"
+        from_port   = 443
+        to_port     = 443
+        ip_protocol = "tcp"
+        cidr_ipv4   = v.cidr_block
+      } if v.tier == "secondary"
   ])
   egress_with_cidr_ipv4 = [
     {

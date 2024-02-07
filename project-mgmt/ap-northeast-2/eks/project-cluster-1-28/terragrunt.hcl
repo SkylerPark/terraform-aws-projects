@@ -59,6 +59,10 @@ locals {
 }
 
 inputs = {
+  ################################################################################
+  # EKS Cluster 
+  ################################################################################
+
   name                           = "${local.project_name}-eks"
   cluster_version                = "1.28"
   cluster_enabled_log_types      = []
@@ -93,6 +97,9 @@ inputs = {
         }
       })
     }
+    aws-ebs-csi-driver = {
+      most_recent = true
+    }
   }
 
   ################################################################################
@@ -107,6 +114,14 @@ inputs = {
       username = dependency.iam_iac_role.outputs.iam_role_name
       groups   = ["system:masters"]
     },
+    # {
+    #   rolearn  = dependency.iam_eks_karpenter_role.outputs.iam_role_arn
+    #   username = "system:node:{{EC2PrivateDNSName}}"
+    #   groups = [
+    #     "system:bootstrappers",
+    #     "system:nodes",
+    #   ]
+    # }
   ]
 
   aws_auth_users = [
@@ -159,6 +174,7 @@ inputs = {
   ################################################################################
   # EKS Fargate Profile
   ################################################################################
+
   fargate_profile_defaults = {
     iam_role_arn = dependency.iam_eks_fargate_role.outputs.iam_role_arn
   }
@@ -179,6 +195,7 @@ inputs = {
   ################################################################################
   # AWS Load Balancer Controller
   ################################################################################
+
   enable_aws_load_balancer_controller = true
   aws_load_balancer_controller = {
     policy_document = jsonencode(
@@ -447,6 +464,7 @@ inputs = {
   ################################################################################
   # Karpenter
   ################################################################################
+
   enable_karpenter = true
   karpenter = {
     default_instance_profile = dependency.iam_eks_karpenter_role.outputs.iam_instance_profile_id
@@ -481,7 +499,7 @@ inputs = {
             "Action" : "ec2:TerminateInstances",
             "Condition" : {
               "StringLike" : {
-                "ec2:ResourceTag/Name" : "*karpenter*"
+                "ec2:ResourceTag/Name" : "*${local.project_name}"
               }
             },
             "Effect" : "Allow",
@@ -531,8 +549,42 @@ inputs = {
   ################################################################################
   # argo rollouts
   ################################################################################
+
   enable_argo_rollouts = true
   argo_rollouts = {
     values = ["${file("argo-rollouts-values.yaml")}"]
+  }
+
+  ################################################################################
+  # ArgoCD
+  ################################################################################
+
+  enable_argocd = true
+  argocd = {
+    set = [
+      {
+        name  = "redis-ha.enabled"
+        value = "true"
+      },
+      {
+        name  = "controller.replicas"
+        value = 1
+      },
+      {
+        name  = "server.replicas"
+        value = 2
+      },
+      {
+        name  = "repoServer.replicas"
+        value = 2
+      },
+      {
+        name  = "applicationSet.replicas"
+        value = 2
+      }
+    ]
+    values = [templatefile("argocd-values.yaml", {
+      certificate_arn = dependency.com2us_com_cert.outputs.id["com2uscom-20240713"]
+    })]
   }
 }

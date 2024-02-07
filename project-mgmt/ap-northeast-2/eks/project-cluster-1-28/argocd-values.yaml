@@ -1,0 +1,27 @@
+global:
+  topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: "topology.kubernetes.io/zone"
+    whenUnsatisfiable: DoNotSchedule
+    
+server:
+  extraArgs:
+   - --insecure
+  ingress:
+    enabled: true
+    https: true
+    annotations:
+      alb.ingress.kubernetes.io/certificate-arn: ${certificate_arn}
+      alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-2016-08
+      alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/load-balancer-name: argocd-lb-01
+      alb.ingress.kubernetes.io/tags: Name=argocd-rnd-test-com2us-com
+    hosts:
+      - argocd.com2us.com
+  service:
+    type: NodePort

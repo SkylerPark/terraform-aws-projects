@@ -18,6 +18,10 @@ dependency "iam_iac_role" {
   config_path = "../../../global/iam-assumable-role/iac-role"
 }
 
+dependency "iam_eks_karpenter_role" {
+  config_path = "../../../../global/env-common/iam/karpenter-role"
+}
+
 dependency "kms" {
   config_path = "../../kms/eks-cluster"
 }
@@ -64,7 +68,7 @@ inputs = {
   ################################################################################
 
   name                           = "${local.project_name}-eks"
-  cluster_version                = "1.28"
+  cluster_version                = "1.29"
   cluster_enabled_log_types      = []
   iam_role_arn                   = dependency.iam_eks_cluster_role.outputs.iam_role_arn
   cluster_security_group_ids     = [dependency.eks_cluster_sg.outputs.security_group_id]
@@ -584,7 +588,7 @@ inputs = {
       }
     ]
     values = [templatefile("argocd-values.yaml", {
-      certificate_arn = dependency.com2us_com_cert.outputs.id["com2uscom-20240713"]
+      certificate_arn = "인증서 정보"
     })]
   }
 }
